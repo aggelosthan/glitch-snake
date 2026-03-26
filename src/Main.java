@@ -3,7 +3,7 @@ import javax.swing.*;
 public class Main {
     static void main(String[] args) throws Exception {
         int boardWidth = 500;
-        int boardHeight = boardWidth;
+        int boardHeight = boardWidth + 60;
 
         JFrame frame = new JFrame("Glitch Snake");
         frame.setVisible(true);                     // makes the  Frame visible
