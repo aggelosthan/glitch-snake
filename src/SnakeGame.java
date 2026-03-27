@@ -57,12 +57,15 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
     int speedY;
     boolean gameOver = false;
     int glitchLevel = 0;
+    int level = 1;
+    int pointsThisLevel = 0;
     
 
 
     // Math Equation Generation
-    MathEquation currentQuestion = new MathEquation(1);
+    MathEquation currentQuestion = new MathEquation(level);
 
+    @SuppressWarnings({"OverridableMethodCallInConstructor", "UseSpecificCatch", "Convert2Diamond"})
     SnakeGame(int boardWidth, int boardHeight){
         this.boardWidth = boardWidth;
         this.boardHeight = boardHeight;
@@ -87,7 +90,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
         // Food Generation
         foodTiles = new ArrayList<>();
         random = new Random();
-        generateMathFood();
+        generateMathFood(level);
         speedX = 0;
         speedY = 0;
 
@@ -104,10 +107,14 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
 
     public void draw(Graphics draw){
             //COLORS
-            Color hudBackColor = new Color(38,38,38);
+            Color hudBackColor = new Color(15,17,19);
+            Color hudTextColor = new Color(119,119,122);
             Color snakeHeadColor = new Color(2,231,61);
             Color snakeBodyColor = new Color(110,178,101);
-            Color textColor = new Color(90, 88, 217);
+            Color mathEquationColor = new Color(140,231,133);
+            Color scoreColor = new Color(250, 83 ,249);
+            Color mapLevelScore = new Color(198, 255 ,255);
+            Color glitchLevelScore = new Color(136, 0 ,21);
 
             //HUD
             draw.setColor(hudBackColor);
@@ -117,39 +124,39 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
     
                 // Math Equation String
                 draw.setFont(myFont.deriveFont(Font.PLAIN, 20f));
-                draw.setColor(textColor);
+                draw.setColor(hudTextColor);
                 draw.drawString("Math Equation", 10, boardHeight / tileSize + -1);
                 // Math Equation
                 draw.setFont(myFont.deriveFont(Font.PLAIN, 22f));
-                draw.setColor(Color.white);
-                draw.drawString(" " + currentQuestion.getDisplayString(), 15, boardHeight / tileSize + 25);
+                draw.setColor(mathEquationColor);
+                draw.drawString(currentQuestion.getDisplayString(), 15, boardHeight / tileSize + 25);
 
                 // Score HUD String
                 draw.setFont(myFont.deriveFont(Font.PLAIN, 20f));
-                draw.setColor(textColor);
+                draw.setColor(hudTextColor);
                 draw.drawString("Score", 190, boardHeight / tileSize + -2);
                 // Score HUD
                 draw.setFont(myFont.deriveFont(Font.PLAIN, 25f));
-                draw.setColor(Color.white);
-                draw.drawString("" + String.valueOf(snakeBody.size()), 210, boardHeight / tileSize + 25);
+                draw.setColor(scoreColor);
+                draw.drawString(String.valueOf(snakeBody.size()), 210, boardHeight / tileSize + 25);
 
                 // Glitch Level String
                 draw.setFont(myFont.deriveFont(Font.PLAIN, 20f));
-                draw.setColor(textColor);
+                draw.setColor(hudTextColor);
                 draw.drawString("Glitch Level", 260, boardHeight / tileSize + -1);
                 // Glitch Level
                 draw.setFont(myFont.deriveFont(Font.PLAIN, 25f));
-                draw.setColor(Color.white);
-                draw.drawString("" + String.valueOf(glitchLevel), 300, boardHeight / tileSize + 25);
+                draw.setColor(glitchLevelScore);
+                draw.drawString(String.valueOf(glitchLevel), 300, boardHeight / tileSize + 25);
 
                 // Map Level String
                 draw.setFont(myFont.deriveFont(Font.PLAIN, 20f));
-                draw.setColor(textColor);
+                draw.setColor(hudTextColor);
                 draw.drawString("Map Level", 380, boardHeight / tileSize + -2);
                 // Map Level
                 draw.setFont(myFont.deriveFont(Font.PLAIN, 25f));
-                draw.setColor(Color.white);
-                draw.drawString("0", 420, boardHeight / tileSize + 25);
+                draw.setColor(mapLevelScore);
+                draw.drawString(String.valueOf(level), 420, boardHeight / tileSize + 25);
             }
 
             // Food
@@ -177,8 +184,8 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
             }
         }
 
-    public void generateMathFood(){
-        currentQuestion = new MathEquation(1);
+    public void generateMathFood(int level){
+        currentQuestion = new MathEquation(level);
         foodTiles.clear();
         int x = r.nextInt(boardWidth / tileSize);
         int y = r.nextInt(boardHeight / tileSize);
@@ -194,6 +201,16 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
         return tile1.x == tile2.x && tile1.y == tile2.y;
     }
 
+    public void levelUp(){
+        level++;
+        pointsThisLevel = 0;
+        gameLoop.setDelay(gameLoop.getDelay() - 15);
+        if(level > 5){
+            gameOver = true;
+        }
+    }
+
+
     public void move(){
         // eat food
         for(int i = 0; i < foodTiles.size(); i++ ){
@@ -201,14 +218,18 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
             if(snakeHead.x == ft.x && snakeHead.y == ft.y){
                 if(ft.value == currentQuestion.answer){
                     snakeBody.add(new Tile(snakeHead.x, snakeHead.y));
-                    generateMathFood();
+                    pointsThisLevel++;
+                    generateMathFood(level);
+                    if(pointsThisLevel >= 5){
+                        levelUp();
+                    }
                 }else if(ft.value != currentQuestion.answer){
                     glitchLevel++;
                     if(glitchLevel >= 3){
                         gameOver = true;
                     }
                     System.out.println("Glitch meter increased");
-                    generateMathFood();
+                    generateMathFood(level);
                 }
                 break;
             }
