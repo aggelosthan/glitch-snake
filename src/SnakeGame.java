@@ -56,6 +56,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
     int speedX;
     int speedY;
     boolean gameOver = false;
+    boolean gameWon = false;
     int glitchLevel = 0;
     int level = 1;
     int pointsThisLevel = 0;
@@ -102,6 +103,13 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
 
     public void paintComponent(Graphics snakeDraw){
         super.paintComponent(snakeDraw);
+        if(glitchLevel >= 1 && !gameOver){
+            Graphics2D g2d = (Graphics2D) snakeDraw;
+            int shakeAmount = (glitchLevel >= 2) ? 4 : 2;
+            int dx = r.nextInt(shakeAmount * 2 + 1) - shakeAmount;
+            int dy = r.nextInt(shakeAmount * 2 + 1) - shakeAmount;
+            g2d.translate(dx, dy);
+        }
         draw(snakeDraw);
     }
 
@@ -116,11 +124,45 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
             Color mapLevelScore = new Color(198, 255 ,255);
             Color glitchLevelScore = new Color(136, 0 ,21);
 
+            for(int i = hudHeight; i < boardHeight; i += tileSize){
+                draw.setColor(new Color(25, 25, 25));
+                draw.drawLine(0,i,boardWidth,i);
+            }
+
+            for(int i = 0; i < boardWidth; i += tileSize){
+                draw.setColor(new Color(25, 25, 25));
+                draw.drawLine(i, hudHeight, i, boardHeight);
+            }
+
             //HUD
             draw.setColor(hudBackColor);
             draw.fillRect(0, 0, boardWidth, hudHeight);
 
-            if(!gameOver){
+            if(!gameOver && !gameWon){
+
+                Graphics2D g = (Graphics2D) draw;
+
+                if(glitchLevel >= 1){
+                    g.setColor(new Color(136, 0, 21));
+                    g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.15f));
+                    g.fillRect(0, hudHeight, boardWidth, boardHeight);
+                    g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+                }
+                if(glitchLevel >= 2){
+                    g.setColor(new Color(136, 0, 21));
+                    g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.25f));
+                    g.fillRect(0, hudHeight, boardWidth, boardHeight);
+                    g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+                }
+                // Scan lines
+                if(glitchLevel >= 1){
+                    g.setColor(new Color(0, 0, 0));
+                    g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.25f));
+                    for(int i = hudHeight; i < boardHeight; i += 4){
+                        g.fillRect(0, i, boardWidth, 2);
+                    }
+                    g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+                }
     
                 // Math Equation String
                 draw.setFont(myFont.deriveFont(Font.PLAIN, 20f));
@@ -157,19 +199,32 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
                 draw.setFont(myFont.deriveFont(Font.PLAIN, 25f));
                 draw.setColor(mapLevelScore);
                 draw.drawString(String.valueOf(level), 420, boardHeight / tileSize + 25);
+            }else if(gameWon){
+                draw.setColor(Color.white);
+                draw.drawString("You won all the levels, Score: " + String.valueOf(snakeBody.size()), boardWidth / 4, boardHeight / 2);
             }
+
 
             // Food
             draw.setColor(Color.darkGray);
             for(int i = 0; i < foodTiles.size(); i++){
                 FoodTile ft = foodTiles.get(i);
-                draw.setColor(Color.white);
+                draw.setColor(new Color(25, 25, 25));
                 draw.fill3DRect(ft.x * tileSize, ft.y * tileSize + hudHeight, tileSize, tileSize, true);
-                draw.setColor(Color.black);
+                draw.setColor(new Color(70,70,70));
                 draw.setFont(myFont.deriveFont(Font.BOLD, 17f));
-                draw.drawString(String.valueOf(ft.value), ft.x * tileSize + 2, ft.y * tileSize + hudHeight + tileSize - 7);
-                
+                draw.drawString(String.valueOf(ft.value), ft.x * tileSize + 2, ft.y * tileSize + hudHeight + tileSize - 7); 
             }
+
+            // draw.setColor(Color.pink);
+            // for(int i = 0; i < foodTiles.size(); i++){
+            //     FoodTile ft = foodTiles.get(i);
+            //     draw.setColor(new Color(25, 25, 25));
+            //     draw.fill3DRect(ft.x * tileSize, ft.y * tileSize + hudHeight, tileSize, tileSize, true);
+            //     draw.setColor(new Color(70,70,70));
+            //     draw.setFont(myFont.deriveFont(Font.BOLD, 17f));
+            //     draw.drawString("X", ft.x * tileSize + 2, ft.y * tileSize + hudHeight + tileSize - 7); 
+            // }
 
             // Snake Head
 
@@ -187,12 +242,13 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
     public void generateMathFood(int level){
         currentQuestion = new MathEquation(level);
         foodTiles.clear();
+        int playableTilesY = (boardHeight - hudHeight) / tileSize;
         int x = r.nextInt(boardWidth / tileSize);
-        int y = r.nextInt(boardHeight / tileSize);
+        int y = r.nextInt(playableTilesY);
         int value = currentQuestion.answer;
         foodTiles.add(new FoodTile(x, y, value));
         for(int i = 0; i < 3; i++){
-            foodTiles.add(new FoodTile(r.nextInt(boardWidth/ tileSize), r.nextInt(boardHeight / tileSize), r.nextInt(100) + 1));
+            foodTiles.add(new FoodTile(r.nextInt(boardWidth / tileSize), r.nextInt(playableTilesY), r.nextInt(100) + 1));
         }
 
     }
@@ -206,7 +262,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
         pointsThisLevel = 0;
         gameLoop.setDelay(gameLoop.getDelay() - 15);
         if(level > 5){
-            gameOver = true;
+            gameWon = true;
         }
     }
 
@@ -225,6 +281,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
                     }
                 }else if(ft.value != currentQuestion.answer){
                     glitchLevel++;
+                    gameLoop.setDelay(gameLoop.getDelay() - 20);
                     if(glitchLevel >= 3){
                         gameOver = true;
                     }
@@ -270,7 +327,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
     public void actionPerformed(ActionEvent e) {
         move();
         repaint();
-        if(gameOver){
+        if(gameOver || gameWon){
             gameLoop.stop();
         }
     }
@@ -296,6 +353,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
                 snakeBody.remove(snakeBody.size() - 1);
                 snakeBody.remove(snakeBody.size() - 1);
                 glitchLevel--;
+                gameLoop.setDelay(gameLoop.getDelay() + 15);
             }
         }
     }
@@ -321,8 +379,8 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
 
         MathEquation(int level){
             if(level == 1 || level == 2){
-                this.operandA = r.nextInt(0,60) + 1;
-                this.operandB = r.nextInt(0,60) + 1;
+                this.operandA = r.nextInt(1,40) + 1;
+                this.operandB = r.nextInt(1,40) + 1;
                 if(r.nextInt(2) == 0){
                     this.operator = "+";
                 }else{
@@ -336,13 +394,13 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
                         this.answer = operandA - operandB;
                 }
             }else if(level == 3 || level == 4){
-                this.operandA = r.nextInt(0,100) + 1;
-                this.operandB = r.nextInt(0,100) + 1;
+                this.operandA = r.nextInt(1,10) + 1;
+                this.operandB = r.nextInt(1,10) + 1;
                 this.operator = "*";
                 this.answer = operandA * operandB;
             }else if(level == 5){
-                this.operandA = r.nextInt(1,100) + 1;
-                this.operandB = r.nextInt(1,100) + 1;
+                this.operandA = r.nextInt(1,10) + 1;
+                this.operandB = r.nextInt(1,10) + 1;
                 this.operator = "/";
                 this.answer = operandA / operandB;
 
