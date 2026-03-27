@@ -1,3 +1,4 @@
+import java.awt.*;
 import javax.swing.*;
 
 public class Main {
@@ -6,15 +7,30 @@ public class Main {
         int boardHeight = boardWidth + 60;
 
         JFrame frame = new JFrame("Glitch Snake");
-        frame.setVisible(true);                     // makes the  Frame visible
-        frame.setSize(boardWidth, boardHeight);
-        frame.setLocationRelativeTo(null);         // open up window at center of screen
-        frame.setResizable(false);                  // not resizable
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);   // when user press X , it terminates the program
+        frame.setResizable(false);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // ICO placement on window
+        try {
+            frame.setIconImage(javax.imageio.ImageIO.read(new java.io.File("assets\\favicon.png")));
+        } catch (Exception e) {}
+
+        // connection between 2 panels.
+        CardLayout cardLayout = new CardLayout();
+        JPanel container = new JPanel(cardLayout);
 
         SnakeGame snakeGame = new SnakeGame(boardWidth, boardHeight);
-        frame.add(snakeGame);
-        frame.pack();           // uses the full dimension without the white bar on top (that with the name "Glitch Snake")
-        snakeGame.requestFocus();
+        StartPanel startPanel = new StartPanel(boardWidth, boardHeight, cardLayout, container, snakeGame);
+
+        container.add(startPanel, "START");
+        container.add(snakeGame, "GAME");
+
+        frame.add(container);
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+
+        cardLayout.show(container, "START");
+        startPanel.requestFocus();
     }
 }
