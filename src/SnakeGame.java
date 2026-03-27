@@ -95,7 +95,6 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
         speedX = 0;
         speedY = 0;
 
-
         // Game Loop Generation
         gameLoop = new Timer(100, this);
         gameLoop.start();
@@ -124,6 +123,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
             Color mapLevelScore = new Color(198, 255 ,255);
             Color glitchLevelScore = new Color(136, 0 ,21);
 
+            // MAP
             for(int i = hudHeight; i < boardHeight; i += tileSize){
                 draw.setColor(new Color(25, 25, 25));
                 draw.drawLine(0,i,boardWidth,i);
@@ -142,6 +142,7 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
 
                 Graphics2D g = (Graphics2D) draw;
 
+                // Shake Screen Effect
                 if(glitchLevel >= 1){
                     g.setColor(new Color(136, 0, 21));
                     g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.15f));
@@ -201,7 +202,12 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
                 draw.drawString(String.valueOf(level), 420, boardHeight / tileSize + 25);
             }else if(gameWon){
                 draw.setColor(Color.white);
+                draw.setFont(myFont.deriveFont(Font.PLAIN, 35f));
                 draw.drawString("You won all the levels, Score: " + String.valueOf(snakeBody.size()), boardWidth / 4, boardHeight / 2);
+            }else {
+                draw.setFont(myFont.deriveFont(Font.PLAIN, 15f));
+                draw.setColor(Color.white);
+                draw.drawString("GAME OVER. Final Score is: " + String.valueOf(snakeBody.size()) + " Press R to restart" ,  boardWidth / 6, boardHeight / 2);
             }
 
 
@@ -227,7 +233,6 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
             // }
 
             // Snake Head
-
             draw.setColor(snakeHeadColor);
             draw.fill3DRect(snakeHead.x * tileSize,snakeHead.y * tileSize + hudHeight, tileSize,tileSize, true);
 
@@ -353,8 +358,22 @@ public class SnakeGame extends JPanel implements ActionListener, KeyListener{
                 snakeBody.remove(snakeBody.size() - 1);
                 snakeBody.remove(snakeBody.size() - 1);
                 glitchLevel--;
-                gameLoop.setDelay(gameLoop.getDelay() + 15);
+                gameLoop.setDelay(gameLoop.getDelay() + 20);
             }
+        }else if(e.getKeyCode() == KeyEvent.VK_R){
+            snakeHead = new Tile(5, 5);
+            snakeBody = new ArrayList<Tile>();
+            speedX = 0;
+            speedY = 0;
+            glitchLevel = 0;
+            level = 1;
+            pointsThisLevel = 0;
+            gameOver = false;
+            gameWon = false;
+            gameLoop.stop();
+            gameLoop.setDelay(100);
+            generateMathFood(level);
+            gameLoop.start();
         }
     }
 
